@@ -9,7 +9,32 @@ argument_specs:
     options:
       mdadm_arrays:
         type: "dict"
-        required: true
-        description: MDADM hash see defaults/main.yml for more details.
+        required: false
+        default: {}
+        description: >
+          MDADM hash keyed by array name, see defaults/main.yml for more details. Per-array keys are
+          validated by the role (level, drives, chunk, bitmap, assume_clean, force, name, metadata).
+          When undefined or empty the role does nothing.
       mdadm_packages:
         type: "list"
+        elements: "str"
+      mdadm_conf_path:
+        type: "str"
+        default: /etc/mdadm/mdadm.conf
+        description: Path of mdadm.conf.
+      mdadm_default_chunk:
+        type: "int"
+        default: 256
+        description: Default chunk size in KiB.
+      mdadm_default_metadata:
+        type: "str"
+        default: "1.2"
+        description: Default superblock version.
+      mdadm_default_assume_clean:
+        type: "bool"
+        default: false
+        description: Default for per-array assume_clean.
+      mdadm_default_force:
+        type: "bool"
+        default: false
+        description: Default for per-array force.

@@ -1,0 +1,15 @@
+---
+- name: Check
+  become: true
+  hosts: all
+  tasks:
+  - name: Get segment types
+    ansible.builtin.command: lvs --noheadings --options lv_name,segtype pool0
+    register: _lvs
+    changed_when: false
+  - name: Check pool and thin volume
+    ansible.builtin.assert:
+      that:
+      - _lvs.stdout_lines | map('trim') | select('match', '^pool\s+thin-pool$') | list | length == 1
+      - _lvs.stdout_lines | map('trim') | select('match', '^data\s+thin$') | list | length == 1
+      - _lvs.stdout_lines | map('trim') | select('match', '^lv0\s+linear$') | list | length == 1

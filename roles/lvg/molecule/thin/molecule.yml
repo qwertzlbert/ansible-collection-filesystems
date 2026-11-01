@@ -1,0 +1,26 @@
+---
+
+driver:
+  name: default
+  options:
+    managed: false
+    ansible_connection_options:
+      ansible_connection: local
+
+provisioner:
+  name: ansible
+  playbooks:
+    cleanup: ../_shared/cleanup.yml
+    prepare: ../_shared/prepare.yml
+    verify: verify.yml
+
+platforms:
+  - name: instance
+
+scenario:
+  test_sequence:
+    - prepare
+    - create
+    - converge
+    - verify
+    - cleanup

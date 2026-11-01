@@ -2,6 +2,11 @@
 - name: Instantiate volume group
   become: true
   block:
+  - name: Ensure LVM and thin provisioning tools are installed
+    ansible.builtin.package:
+      name: "{{ lvg_packages | default(_lvg_packages_by_os_family[ansible_facts['os_family'] | default('Debian')] | default(_lvg_packages_by_os_family['Debian'])) }}"
+      state: present
+
   - name: Run pool interaction
     ansible.builtin.include_tasks: _lv.yml
     loop: "{{ volume_groups | dict2items }}"
@@ -11,4 +16,5 @@
     vars:
       _vg_name: "{{ _lv_item.key }}"
       _vg_drives: "{{ _lv_item.value.drives }}"
-      _vg_logical_volumes: "{{ _lv_item.value.logical_volumes | default({}) }}"
+      _vg_logical_volumes: "{{ _lv_item.value.logical_volumes | default({}, true) }}"
+      _vg_thin_pools: "{{ _lv_item.value.thin_pools | default({}, true) }}"

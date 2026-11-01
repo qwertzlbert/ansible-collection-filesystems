@@ -1,0 +1,30 @@
+---
+- name: Validate array definition
+  ansible.builtin.assert:
+    quiet: true
+    that:
+    - outer_item.value is mapping
+    - outer_item.key is match('^[A-Za-z0-9_.-]+$')
+    - outer_item.value.drives is defined
+    - outer_item.value.drives is sequence
+    - outer_item.value.drives is not string
+    - outer_item.value.drives is not mapping
+    - outer_item.value.level is defined
+    - _mdadm_level in _mdadm_level_min_drives
+    - (outer_item.value.drives | unique | count) == (outer_item.value.drives | count)
+    - (outer_item.value.drives | count) >= (_mdadm_level_min_drives[_mdadm_level] | int)
+    - (outer_item.value.chunk | default(mdadm_default_chunk) | string) is match('^[1-9][0-9]*$')
+    - (outer_item.value.bitmap | default('none') | string) == 'none' or _mdadm_level != 'raid0'
+    fail_msg: >-
+      Invalid definition for array {{ outer_item.key }}. 'drives' must be a list of unique devices and
+      'level' one of {{ _mdadm_level_min_drives.keys() | list | join(', ') }} with at least
+      {{ _mdadm_level_min_drives[_mdadm_level] | default('?') }} drives. 'chunk' must be a positive
+      integer (KiB) and raid0 does not support a bitmap.
+  vars:
+    _mdadm_level: "{{ 'raid' ~ ((outer_item.value.level | default('') | string | lower) | regex_replace('^raid', '')) }}"
+    _mdadm_level_min_drives:
+      raid0: 2
+      raid1: 2
+      raid5: 3
+      raid6: 4
+      raid10: 2

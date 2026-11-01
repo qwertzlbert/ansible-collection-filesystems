@@ -8,11 +8,39 @@
 # mdadm_arrays:
 #   md0:
 #     drives:
-#     - "/dev/nvme1n1"
-#     - "/dev/nvme2n1"
-#     level: "raid0"
+#     - "/dev/sdb"
+#     - "/dev/sdc"
+#     - "/dev/sdd"
+#     level: "raid5"
+#     chunk: 512
+#     bitmap: internal
 #   md1:
 #     drives:
-#     - "/dev/nvme3n1"
-#     - "/dev/nvme4n1"
-#     level: "raid0"
+#     - "/dev/nvme1n1"
+#     - "/dev/nvme2n1"
+#     level: "raid1"
+#
+# Per-array options
+# * drives        -- (required) List of member devices. Whole disks are fine, no partitioning needed.
+# * level         -- (required) One of raid0, raid1, raid5, raid6, raid10 (a bare number such as `10` is accepted).
+# * chunk         -- Chunk size in KiB. Ignored for raid1. Default: `mdadm_default_chunk`.
+# * bitmap        -- `internal`, `none` or a file path. Default is `internal` for raid1/5/6 and none otherwise,
+#                    the bitmap avoids a full resync after an unclean shutdown. Not valid for raid0.
+# * assume_clean  -- Pass `--assume-clean`, which skips the initial sync. Do NOT use this on raid1/5/6/10, the
+#                    parity/mirror is left inconsistent and a later disk failure can rebuild garbage silently.
+#                    Default: `mdadm_default_assume_clean` (false).
+# * force         -- Create the array even if a member already carries an md superblock, a filesystem, an LVM
+#                    or a partition table signature. DESTROYS THAT DATA. Default: `mdadm_default_force` (false).
+# * name          -- Optional array name (`--name`).
+# * metadata      -- Superblock version. Default: `mdadm_default_metadata`.
+#
+# The existing-signature check only runs when an array is about to be created. An array already listed in
+# /proc/mdstat or in mdadm.conf is never touched.
+mdadm_arrays: {}
+
+mdadm_default_chunk: 256
+mdadm_default_metadata: "1.2"
+mdadm_default_assume_clean: false
+mdadm_default_force: false
+
+mdadm_conf_path: /etc/mdadm/mdadm.conf

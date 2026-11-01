@@ -5,6 +5,9 @@
 # * logical_volumes  -- A hash of logical volumes to be created under a given VG, with each volume
 #                       key additional configuration can be defined. If no additional configuration
 #                       is needed the key can be used with an empty hash or null.
+# * thin_pools      -- A hash of thin pools to be created under a given VG. Each pool carries its own
+#                       `thin_volumes` hash. Pools are only created when missing (never resized or
+#                       recreated by this role). Thin volume sizes are virtual sizes in lvol syntax.
 #
 #   Logical volumes can be forcefully resized by setting the `resizefs` option to **true**.
 #   Logical volumes can not shrink, the role forcefully prohibits this to protect data.
@@ -22,6 +25,17 @@
 #       account:
 #         size: 200G
 #         opts: --type cache-pool
+#     thin_pools:
+#       pool:                    # dict key = pool LV name
+#         size: 90%FREE          # never 100%, see README
+#         chunksize: 1m          # optional
+#         metadata_size: 4g      # optional (--poolmetadatasize)
+#         zero: false            # optional, default false (--zero n)
+#         thin_volumes:
+#           data:
+#             size: 8T           # virtual size, may exceed the pool
+#             resizefs: false    # optional
+#             opts: ""           # optional
 
 # The pe_config dictionary allows operators to further control how physical volumes are represented.
 # The default will allow the module to dynamically resize the physical volume, and sets a known good
@@ -30,3 +44,7 @@ pe_config:
   pesize: 32M
   pvresize: true
   # pv_options: ""
+
+# Packages installed before any volume work. Defaults to a per OS family list that contains lvm2,
+# thin_check (thin-provisioning-tools / device-mapper-persistent-data) and xfsprogs.
+# lvg_packages: []

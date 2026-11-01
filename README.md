@@ -14,6 +14,10 @@ Roles included in this collection (click on the link to see the role's README an
   - `cloudnull.filesystems.zfs_replicate`
   - `cloudnull.filesystems.zfs_setup`
 
+This fork adds RAID5/RAID1 safety checks to `mdadm` (no `--assume-clean` by default, refusal to overwrite existing
+data, input validation, bitmaps) and LVM thin pool / thin volume support to `lvg`. See the role READMEs. A typical
+data disk stack is `mdadm` -> `lvg` (thin pool, XFS thin volumes) -> `format`.
+
 > All roles use input validation to ensure types are correct. Detailed documentation on defaults and other variables can always
   be found in `defaults/main.yml`.
 

@@ -23,13 +23,44 @@
             size: 256G
   - role: cloudnull.filesystems.format
     format_filesystem: xfs
-    format_device: /dev/mapper/lv0
+    format_device: /dev/pool0/lv0
     format_mount_point: /mnt/lv0-mount-point
   - role: cloudnull.filesystems.format
     format_filesystem: xfs
-    format_device: /dev/mapper/lv1
+    format_device: /dev/pool0/lv1
     format_mount_point: /mnt/lv1-mount-point
   - role: cloudnull.filesystems.format
     format_filesystem: xfs
-    format_device: /dev/mapper/lv2
+    format_device: /dev/pool0/lv2
     format_mount_point: /mnt/lv2-mount-point
+# Thin pool on top of a RAID5 array, XFS with matching stripe geometry
+- name: Run thin LV file system setup
+  become: true
+  hosts: all
+  gather_facts: true
+  tags:
+  - thin
+  roles:
+  - role: cloudnull.filesystems.mdadm
+    mdadm_arrays:
+      md0:
+        level: raid5
+        drives: ["/dev/sdb", "/dev/sdc", "/dev/sdd"]
+        chunk: 512
+  - role: cloudnull.filesystems.lvg
+    volume_groups:
+      vg_hdd1:
+        drives: ["/dev/md0"]
+        thin_pools:
+          pool:
+            size: 90%FREE
+            chunksize: 1m
+            thin_volumes:
+              data:
+                size: 8T
+  - role: cloudnull.filesystems.format
+    format_filesystem: xfs
+    format_device: /dev/vg_hdd1/data
+    format_mount_point: /srv/data
+    format_options: "-d su=512k,sw=2"
+    format_mount_options: noatime,nofail

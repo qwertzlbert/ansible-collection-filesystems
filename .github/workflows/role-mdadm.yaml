@@ -16,6 +16,7 @@ jobs:
         scenario:
         - 2drive-raid0
         - 4drive-raid10
+        - 3drive-raid5
     steps:
     - name: Check out the repo
       # versioneer: updater=github repository=actions/checkout max-major=7 tags=github

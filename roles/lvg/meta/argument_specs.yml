@@ -10,4 +10,9 @@ argument_specs:
       volume_groups:
         type: "dict"
         required: true
-        description: Volume group hash
+        description: Volume group hash, keys per VG are drives, logical_volumes and thin_pools (see defaults/main.yml)
+      lvg_packages:
+        type: "list"
+        elements: "str"
+        required: false
+        description: Override the packages installed by the role (default depends on OS family).

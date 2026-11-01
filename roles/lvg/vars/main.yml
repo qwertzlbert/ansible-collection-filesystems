@@ -1,0 +1,11 @@
+---
+# thin_check (used to activate and repair thin pools) ships in a different package per family.
+_lvg_packages_by_os_family:
+  Debian:
+  - lvm2
+  - thin-provisioning-tools
+  - xfsprogs
+  RedHat:
+  - lvm2
+  - device-mapper-persistent-data
+  - xfsprogs

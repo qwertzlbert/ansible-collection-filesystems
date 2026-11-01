@@ -19,3 +19,10 @@
   loop_control:
     loop_var: _lvol_item
     label: "{{ _lvol_item.key }}"
+
+- name: Create thin pools and thin volumes
+  ansible.builtin.include_tasks: _thin_pool.yml
+  loop: "{{ _vg_thin_pools | dict2items }}"
+  loop_control:
+    loop_var: _pool_item
+    label: "{{ _vg_name }}/{{ _pool_item.key }}"

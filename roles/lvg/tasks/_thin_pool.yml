@@ -1,0 +1,54 @@
+---
+# NOTE: community.general.lvol is not reliably idempotent for percentage sizes on an existing LV
+#       (90%FREE is evaluated against the free space left *after* the pool was created), so the
+#       pool itself is created with a guarded lvcreate. Thin volumes use lvol with `thinpool`.
+- name: Validate thin pool definition
+  ansible.builtin.assert:
+    quiet: true
+    that:
+    - _pool_item.value.size is defined
+    - not ((_pool_item.value.size | string) is match('^100%'))
+    fail_msg: >-
+      Thin pool {{ _vg_name }}/{{ _pool_item.key }} needs a size and it must not be 100% of
+      anything, LVM keeps a pool metadata spare of the same size as the metadata.
+
+- name: Check for thin pool
+  ansible.builtin.command:
+    argv:
+    - lvs
+    - --noheadings
+    - --options
+    - lv_name
+    - "{{ _vg_name }}/{{ _pool_item.key }}"
+  register: _lvg_pool_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Create thin pool
+  ansible.builtin.command:
+    argv: >-
+      {{
+        ['lvcreate', '--yes', '--type', 'thin-pool', '--name', _pool_item.key,
+         ('--extents' if ('%' in (_pool_item.value.size | string)) else '--size'),
+         _pool_item.value.size | string,
+         '--zero', ('y' if (_pool_item.value.zero | default(false) | bool) else 'n')]
+        + (['--chunksize', _pool_item.value.chunksize | string] if _pool_item.value.chunksize is defined else [])
+        + (['--poolmetadatasize', _pool_item.value.metadata_size | string] if _pool_item.value.metadata_size is defined else [])
+        + [_vg_name]
+      }}
+  when: _lvg_pool_check.rc != 0
+
+- name: Create thin volumes
+  community.general.lvol:
+    vg: "{{ _vg_name }}"
+    lv: "{{ _thin_item.key }}"
+    thinpool: "{{ _pool_item.key }}"
+    size: "{{ _thin_item.value.size }}"
+    opts: "{{ _thin_item.value.opts | default(omit) }}"
+    resizefs: "{{ _thin_item.value.resizefs | default(omit) }}"
+    shrink: false
+  loop: "{{ _pool_item.value.thin_volumes | default({}, true) | dict2items }}"
+  loop_control:
+    loop_var: _thin_item
+    label: "{{ _pool_item.key }}/{{ _thin_item.key }}"

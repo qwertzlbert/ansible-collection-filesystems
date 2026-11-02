@@ -36,7 +36,15 @@
       state: "present"
       create: true
       mode: "0644"
-    loop: '{{ array_details.stdout_lines | select("match", "^ARRAY ") | list }}'
+    # NOTE: spares=N is runtime state (it shows up while the initial sync is running and
+    #       vanishes afterwards), so it is dropped to keep the written line stable.
+    loop: >-
+      {{
+        array_details.stdout_lines
+        | select("match", "^ARRAY ")
+        | map("regex_replace", "[ ]+spares=[0-9]+", "")
+        | list
+      }}
     loop_control:
       loop_var: _mdadm_item
     notify: Update initramfs

@@ -46,16 +46,22 @@
   # NOTE: --run answers mdadm's "Continue creating array?" prompt (which also fires for
   #       raid1 with 1.x metadata), so the checks below are the safety gate instead.
   - name: Look for existing md superblocks on members
-    ansible.builtin.command: "mdadm --examine {{ item }}"
+    ansible.builtin.command: "mdadm --examine {{ _mdadm_drive }}"
     loop: "{{ outer_item.value.drives }}"
+    loop_control:
+      loop_var: _mdadm_drive
+      label: "{{ _mdadm_drive }}"
     register: _mdadm_examine
     changed_when: false
     failed_when: false
     check_mode: false
 
   - name: Look for existing filesystem, LVM or partition signatures on members
-    ansible.builtin.command: "wipefs --noheadings --output TYPE {{ item }}"
+    ansible.builtin.command: "wipefs --noheadings --output TYPE {{ _mdadm_drive }}"
     loop: "{{ outer_item.value.drives }}"
+    loop_control:
+      loop_var: _mdadm_drive
+      label: "{{ _mdadm_drive }}"
     register: _mdadm_wipefs
     changed_when: false
     check_mode: false
@@ -71,8 +77,8 @@
     vars:
       _dirty: >-
         {{
-          (_mdadm_examine.results | selectattr('rc', 'eq', 0) | map(attribute='item') | list
-           + _mdadm_wipefs.results | selectattr('stdout_lines') | map(attribute='item') | list)
+          (_mdadm_examine.results | selectattr('rc', 'eq', 0) | map(attribute='_mdadm_drive') | list
+           + _mdadm_wipefs.results | selectattr('stdout_lines') | map(attribute='_mdadm_drive') | list)
           | unique
         }}
 

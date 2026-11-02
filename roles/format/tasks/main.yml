@@ -65,28 +65,31 @@
 
   - name: Remove stale fstab entries for this device
     ansible.posix.mount:
-      path: "{{ item }}"
+      path: "{{ _format_path }}"
       state: absent
     loop: "{{ _format_stale_mount_points }}"
     loop_control:
-      label: "{{ item }}"
+      loop_var: _format_path
+      label: "{{ _format_path }}"
 
   - name: Create mountpoints
     ansible.builtin.file:
-      path: "{{ item }}"
+      path: "{{ _format_path }}"
       state: directory
       mode: "0755"
     loop: "{{ _format_mount_points }}"
     loop_control:
-      label: "{{ item }}"
+      loop_var: _format_path
+      label: "{{ _format_path }}"
 
   - name: Mount the filesystem
     ansible.posix.mount:
-      path: "{{ item }}"
+      path: "{{ _format_path }}"
       src: "{{ format_device }}"
       fstype: "{{ format_filesystem }}"
       opts: "{{ _format_mount_options }}"
       state: mounted
     loop: "{{ _format_mount_points }}"
     loop_control:
-      label: "{{ item }}"
+      loop_var: _format_path
+      label: "{{ _format_path }}"
